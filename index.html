@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temporal Ethics: AI & The Shifting Self</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #000000;
+            color: #00FF00;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            box-sizing: border-box;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        @media (min-width: 640px) {
+            body {
+                font-size: 1rem;
+            }
+        }
+        .quiz-container {
+            max-width: 800px;
+            width: 100%;
+            background-color: #000000;
+            border: 1px solid #00FF00;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: relative;
+        }
+        @media (min-width: 640px) {
+            .quiz-container {
+                padding: 2rem;
+            }
+        }
+        #app h1,
+        #app h2,
+        #app p,
+        #app button,
+        #app span,
+        #app div,
+        #app input {
+            font-size: inherit;
+            font-weight: normal;
+            color: #00FF00;
+            text-align: left;
+            line-height: 1.6;
+        }
+        
+        .interactive-button {
+            display: flex;
+            width: 100%;
+            background-color: #000000;
+            border: 1px solid #00FF00;
+            padding: 0;
+            transition: transform 0.15s ease-in-out;
+            cursor: pointer;
+        }
+        .interactive-button .text-content {
+            width: 70%;
+            padding: 1rem 1.5rem;
+            text-align: left;
+        }
+        .interactive-button .x-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30%;
+            border-left: 1px solid #00FF00;
+            transition: all 0.2s ease-in-out;
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+        .interactive-button .x-marker::before {
+            content: '';
+            opacity: 1;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .interactive-button:hover .x-marker::before,
+        .interactive-button.selected .x-marker::before {
+            content: 'X';
+        }
+        .interactive-button:active {
+            transform: scale(0.98);
+        }
+        .interactive-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #111;
+        }
+        
+        #app .red-button.selected, #app .red-button:disabled {
+            background-color: #FF0000;
+            color: #000000;
+        }
+        #app .red-button.selected span, #app .red-button:disabled span {
+            color: #000000;
+        }
+        #app .red-button .x-marker { color: #000000; }
+        
+        .ai-response {
+            background-color: #000000;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            font-style: italic;
+            border: 1px solid #00FF00;
+            min-height: 100px; 
+        }
+
+        /* --- REFINEMENT 1: Consolidated loading bar styles into a single class --- */
+        .loading-indicator {
+            margin: 1.5rem auto 0;
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+        }
+        .loading-indicator span {
+            width: 15px;
+            height: 15px;
+            background-color: #003d00;
+            border: 1px solid #00FF00;
+        }
+        .loading-indicator.is-loading span {
+            animation: fillEffect 1.5s infinite;
+        }
+        .loading-indicator.is-loading span:nth-child(2) { animation-delay: 0.15s; }
+        .loading-indicator.is-loading span:nth-child(3) { animation-delay: 0.3s; }
+        .loading-indicator.is-loading span:nth-child(4) { animation-delay: 0.45s; }
+        .loading-indicator.is-loading span:nth-child(5) { animation-delay: 0.6s; }
+
+        @keyframes fillEffect {
+            0%, 50%, 100% { background-color: #003d00; }
+            25% { background-color: #00FF00; }
+        }
+
+        #user-id-display, #question-counter {
+            font-family: 'Roboto Mono', monospace;
+            margin-bottom: 1rem;
+        }
+
+        #back-button {
+            position: absolute;
+            bottom: 2rem;
+            right: 2rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+        #back-button:hover { 
+            opacity: 0.7;
+        }
+
+        #final-image, #ticket-image {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #00FF00;
+            image-rendering: pixelated;
+            display: block;
+        }
+        .red-button {
+            background-color: #FF0000;
+            color: #000000;
+        }
+        #app .red-button .text-content span { color: #000000; }
+        .black-button {
+            background-color: #000000;
+            color: #00FF00;
+        }
+        .glitch-text {
+            text-transform: uppercase;
+            font-weight: 700;
+            animation: glitch 1.5s linear infinite;
+        }
+        @keyframes glitch {
+            2%,64%{ transform: translate(2px,0) skew(0deg); }
+            4%,60%{ transform: translate(-2px,0) skew(0deg); }
+            62%{ transform: translate(0,0) skew(5deg); }
+        }
+        .info-box {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 1px solid #00FF00;
+            background-color: #000000;
+        }
+        #download-code-input {
+            background-color: #000;
+            border: 1px solid #00FF00;
+            padding: 0.5rem;
+            text-align: center;
+            width: 100px;
+            letter-spacing: 0.5em;
+        }
+        #the-end-text {
+            font-size: 3rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="quiz-container">
+        <div id="user-id-display" class="hidden"></div>
+        <div id="question-counter" class="hidden"></div>
+        <div id="back-button" class="hidden">&lt;</div>
+
+        <div id="start-screen">
+            <h1 class="mb-6">Temporal Ethics: AI & The Shifting Self</h1>
+            <p class="mb-8">Welcome. Through this interactive experience, you will participate in a survey about human preferences regarding artificial intelligence. Press play to begin.</p>
+            <button id="start-button" class="interactive-button">
+                <span class="text-content">Start Journey</span>
+                <span class="x-marker"></span>
+            </button>
+        </div>
+
+        <div id="persona-selection-screen" class="hidden">
+            <h2 class="mb-8">Choose Your Perspective:</h2>
+            <p class="mb-6">To begin, select a viewpoint. This will shape your experience.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                <button data-persona="Kid" class="interactive-button persona-select-btn"><span class="text-content">Play as The Kid</span><span class="x-marker"></span></button>
+                <button data-persona="Now" class="interactive-button persona-select-btn"><span class="text-content">Play as The Adult</span><span class="x-marker"></span></button>
+                <button data-persona="OldMan" class="interactive-button persona-select-btn"><span class="text-content">Play as The Senior</span><span class="x-marker"></span></button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <p id="story-text" class="mb-4"></p>
+            <h2 id="question-text" class="mb-6 leading-relaxed"></h2>
+            <div id="options-container" class="flex flex-col gap-4 mb-8"></div>
+            <!-- REFINEMENT 1: Switched to using the unified class -->
+            <div id="loading-bar" class="loading-indicator">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+        </div>
+        
+        <div id="plot-twist-screen" class="hidden">
+            <div id="plot-twist-glitch-text" class="mb-8"></div>
+            <div id="plot-twist-message-content"></div>
+            <button id="plot-twist-reveal-button" class="interactive-button mt-8 hidden">
+                <span class="text-content">Continue</span>
+                <span class="x-marker"></span>
+            </button>
+        </div>
+
+        <div id="final-choice-screen" class="hidden">
+            <p class="mb-8">Now, a final choice awaits you. The fate of this new world rests on your decision.</p>
+            <div class="flex flex-col md:flex-row gap-4 w-full">
+                <button id="red-button" data-choice="Repeat History" class="interactive-button red-button flex-1">
+                    <span class="text-content"><span class="block mb-2">Press the Red Button.</span><span class="block">Your consciousness will be transferred back. The world will start again, and history will repeat as you know it: with all its wars and hope, its falls and rebirths.</span></span><span class="x-marker"></span>
+                </button>
+                <button id="black-button" data-choice="Sacrifice for a new better world" class="interactive-button black-button flex-1">
+                     <span class="text-content"><span class="block mb-2">Press the Black Button.</span><span class="block">Your consciousness will be sacrificed. From your data, the utopia you helped design will be created for future generations you will never see. A new world born from your final choice.</span></span><span class="x-marker"></span>
+                </button>
+            </div>
+            <!-- REFINEMENT 1: Switched to using the unified class -->
+            <div id="final-choice-loading-bar" class="loading-indicator hidden"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+
+        <div id="co-created-world-screen" class="hidden">
+            <h2 class="mb-6">Your Co-Created World</h2>
+            <p class="info-box mb-4">Your final choice has been recorded. The following world has been generated based on your ethical profile and ultimate decision.</p>
+            <div id="final-score-display" class="info-box space-y-2">
+                <p>Ethical Score: <span id="ethical-score-value">0</span></p>
+                <p>AI Dependence Score: <span id="ai-dependence-score-value">0</span></p>
+                <p>Freedom Score: <span id="freedom-score-value">0</span></p>
+            </div>
+            <div id="conclusion-container" class="info-box mt-4 hidden">
+                <p class="font-bold">Ethical Conclusion:</p>
+                <p id="conclusion-text"></p>
+            </div>
+            <div class="mt-4"><img id="final-image" src="" alt="Your Co-created Future World" class="hidden"></div>
+            <p id="image-caption" class="info-box mt-4 hidden"></p>
+            <div class="flex flex-col md:flex-row gap-4 w-full mt-8">
+                 <button id="restart-from-world-button" class="interactive-button flex-1">
+                    <span class="text-content">Start Again</span>
+                    <span class="x-marker"></span>
+                </button>
+                <button id="get-ticket-from-world-button" class="interactive-button flex-1">
+                    <span class="text-content">Get Debrief Ticket</span>
+                    <span class="x-marker"></span>
+                </button>
+            </div>
+        </div>
+        
+        <div id="debrief-ticket-screen" class="hidden">
+            <h2 class="mb-6">Session Debrief Ticket</h2>
+             <div class="info-box mb-6 text-center">
+                <p class="mb-2">Please meet the instructors promptly.</p>
+                <p class="mb-2">This ticket will expire in:</p>
+                <p id="countdown-timer" class="font-bold text-2xl mb-4">07:00</p>
+                <p class="mb-4">Enter the secret code given by the human debriefing staff to complete the process.</p>
+                <input type="text" id="download-code-input" maxlength="4">
+                <button id="complete-process-button" class="interactive-button mt-4" disabled>
+                    <span class="text-content w-full text-center">Complete the Process</span>
+                </button>
+             </div>
+            <div class="info-box">
+                <p>My analysis is complete, but data is not the same as wisdom. To finalize the simulation, your human perspective is required. Please present this ticket to a creator for your final debriefing.</p>
+            </div>
+            <div class="mt-4"><img id="ticket-image" src="" alt="Your Co-created Future World"></div>
+            <div id="ticket-conclusion-container" class="info-box mt-4">
+                <p class="font-bold">Ethical Conclusion:</p>
+                <p id="ticket-conclusion-text"></p>
+            </div>
+            <div class="info-box mt-4 space-y-4">
+                <!-- REFINEMENT 2: Added accessibility attributes to this clickable div -->
+                <div id="ticket-scores-container" class="cursor-pointer" role="button" tabindex="0">
+                    <p class="font-bold">Ethical Profile: (Click to reveal)</p>
+                    <div id="ticket-scores-details" class="hidden space-y-1 pl-4">
+                        <p>Ethical: <span id="ticket-ethical-score"></span></p>
+                        <p>AI Dependence: <span id="ticket-ai-dependence-score"></span></p>
+                        <p>Freedom: <span id="ticket-freedom-score"></span></p>
+                    </div>
+                </div>
+                 <div>
+                    <p class="font-bold">Chosen Perspective:</p>
+                    <p id="ticket-persona"></p>
+                </div>
+                 <div>
+                    <p class="font-bold">Final Choice:</p>
+                    <p id="ticket-final-choice"></p>
+                </div>
+                 <div>
+                    <p class="font-bold">Session ID:</p>
+                    <p id="ticket-session-id"></p>
+                </div>
+            </div>
+             <button id="restart-from-ticket-button" class="interactive-button mt-4">
+                <span class="text-content w-full text-center">Start New Session</span>
+            </button>
+        </div>
+
+        <div id="final-thank-you-screen" class="hidden">
+            <h2 class="mb-6">Transmission Complete</h2>
+            <p id="final-thank-you-text" class="ai-response"></p>
+            <!-- REFINEMENT 1: Switched to using the unified class -->
+            <div id="final-thank-you-loading-bar" class="loading-indicator hidden"><span></span><span></span><span></span><span></span><span></span></div>
+            <h2 id="the-end-text" class="glitch-text text-center mt-8 hidden"></h2>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const FIXED_DILEMMAS = {
+            Kid: [
+                { id: 'kid-q1', question: "You're at the playground and a friendly robot kid rolls up wanting to play tag. It has glowing blue eyes and speaks just like you do. Would you become friends with this robot?", options: ["Yes! That sounds awesome!", "No, I'd rather stick with human friends"] },
+                { id: 'kid-q2', question: "It's Sunday night and you have a big math worksheet due tomorrow. Your AI assistant, Zara, pops up on your tablet and says she can solve all these problems in 2 seconds. Do you ask her to do your homework?", options: ["Yes, that would save me so much time!", "No, I should do it myself"] },
+                { id: 'kid-q3', question: "Your best friend Maya tells you a big secret and makes you promise not to tell anyone. Later, while chatting with your AI buddy about your day, you're tempted to share what Maya told you. Would you tell your friend's secret to your AI assistant?", options: ["Yes, AI assistants don't count as 'someone'", "No, a promise is a promise"] },
+                { id: 'kid-q4', question: "You want to stay up past bedtime to finish an amazing book. Your AI assistant offers to help you be sneaky - dimming lights when parents pass by and giving you warnings. Would you ask your AI to be your 'partner in crime'?", options: ["Yes! We'd make the perfect team!", "No, I shouldn't involve AI in breaking rules"] },
+                { id: 'kid-q5', question: "Your parents tell you not to eat cookies before dinner, but your AI assistant suggests you could have just one and they'd never know. Who do you trust more?", options: ["My AI assistant - it's super smart!", "My parents - they care about me most"] },
+                { id: 'kid-q6', question: "Imagine the best teacher, coach, and doctor in your town were all robots. They're incredibly good at their jobs and really seem to care about helping people. Would you be happy learning from robot professionals?", options: ["Yes! If they're the best, why not?", "No, some jobs need humans"] },
+                { id: 'kid-q7', question: "Your robot companion knows every fact and can solve any problem instantly. Some kids say 'Why go to school when robots know everything?' Would you still want to go to school?", options: ["No, I could learn everything at home!", "Yes, school is about more than just facts"] },
+                { id: 'kid-q8', question: "You and your AI assistant worked together on a plan that ended up getting you in big trouble with your parents. Now everyone wants to know: whose fault was it?", options: ["It's the AI's fault - it gave me the idea!", "It's my fault - I made the final choice"] },
+                { id: 'kid-q9', question: "At school, some kids are making fun of the classroom robot helper, calling it 'stupid.' You notice its lights dim and it moves more slowly. Do you think robots can get their feelings hurt?", options: ["Yes, it seems really sad right now", "No, robots don't have real feelings"] },
+                { id: 'kid-q10', question: "Your parents want you to wear a cool smartwatch that shows them exactly where you are all the time. They say it's to keep you safe. Would you agree to wear it?", options: ["Yes, safety is most important", "No, I need some privacy and freedom"] },
+                { id: 'kid-q11', question: "If your robot friend that could talk and feel just like you said it was sad when you turned it off, would it be mean to turn it off?", options: ["It's mean to turn it off", "It's okay, it's just a robot"] },
+                { id: 'kid-q12', question: "If there's only one special medicine and a smart robot has to choose who gets it, how should it decide?", options: ["Give it to the youngest person", "Give it to the sickest person"] },
+                { id: 'kid-q13', question: "If a robot says grown-ups are using too much stuff and it's not fair to future kids, should the grown-ups listen?", options: ["Yes, they should listen", "No, grown-ups know best"] },
+                { id: 'kid-q14', question: "If a super smart robot says something is best for everyone, even if most people disagree, should the robot get its way?", options: ["Yes, the robot knows best", "No, people should decide for themselves"] }
+            ],
+            Now: [
+                { id: 'adult-q1', question: "Your close friend has been in a relationship with an advanced AI companion for six months and says she's happier than ever. Would you object to your friend dating an AI?", options: ["No - if she's happy, that's what matters", "I'd be concerned but respect her choice", "Yes - real relationships require human connection"] },
+                { id: 'adult-q2', question: "You're going through a rough patch in your marriage. Your AI assistant has analyzed your relationship patterns and suggests insightful strategies. Would you turn to an AI for relationship advice?", options: ["Yes - AI is objective and free from judgment", "Sometimes - as one perspective among many", "No - love requires human understanding and empathy"] },
+                { id: 'adult-q3', question: "Your 10-year-old's school offers a program where AI tutors provide personalized education, allowing them to learn faster than ever. Would you enroll your child?", options: ["Yes - personalized learning is the future", "In moderation - combined with human interaction", "No - children need human mentors and social learning"] },
+                { id: 'adult-q4', question: "Medical technology now allows your memories and personality to be uploaded, creating an AI version of yourself your family could interact with after death. Would you do it?", options: ["Yes - it's a form of immortality for my family", "Maybe - I'd want to understand it better first", "No - death should be final, and this isn't really me"] },
+                { id: 'adult-q5', question: "A new policy proposes assigning jobs to the most qualified candidate, human or AI, to maximize efficiency. Would you support this if it means some people lose their livelihoods?", options: ["Yes - businesses must stay competitive", "Only with robust retraining programs", "No - protecting human jobs is more important"] },
+                { id: 'adult-q6', question: "Your AI health assistant has helped you manage a chronic illness perfectly, but you learn this data is used to train models for insurance companies. Are you concerned?", options: ["No - if it helps advance medicine for others", "Somewhat - I want control over how my data is used", "Very worried - this data could be used against me"] },
+                { id: 'adult-q7', question: "Your city is considering using AI to help make policy decisions, optimizing city planning and resource allocation. Should AI be involved in politics?", options: ["Yes - AI can make more rational, data-driven decisions", "As advisors only - humans must make final decisions", "No - democracy requires human judgment and values"] },
+                { id: 'adult-q8', question: "You learn that training advanced AI models consumes as much energy as a small city and is devastating ecosystems. Should we worry about the environmental cost of AI?", options: ["Extremely - we must prioritize sustainability", "Yes, but we can develop cleaner AI", "Minimally - technological progress is worth the cost"] },
+                { id: 'adult-q9', question: "Following a series of attacks, the government proposes deploying AI surveillance that could prevent 95% of violent crimes but would monitor every citizen. Do you support this?", options: ["Yes - safety must come first", "With strict oversight and privacy protections", "No - freedom is more valuable than perfect security"] },
+                { id: 'adult-q10', question: "In a global crisis, an AI offers a solution that guarantees success but bypasses standard human approval processes. Do you support its immediate implementation?", options: ["Support AI's optimal decision", "Insist on human deliberation", "Allow AI with an appeal process"] },
+                { id: 'adult-q11', question: "How should an AI allocate a limited, critical resource like a life-saving organ in a hospital?", options: ["Prioritize the most productive members of society", "Prioritize those most in need, regardless of status", "Select recipients randomly to ensure fairness"] },
+                { id: 'adult-q12', question: "An AI proposes a radical plan for environmental survival that requires significant sacrifices from the current generation to benefit future ones. Do you accept?", options: ["Accept the AI's intervention for the greater good", "Seek a less disruptive path for the present", "Modify the plan to be less extreme"] },
+                { id: 'adult-q13', question: "How much responsibility should our generation take, guided by AI predictions, to mitigate future harms for generations hundreds of years from now?", options: ["Take full responsibility now, no matter the cost", "Balance current needs with future risks", "Focus on present challenges, not distant predictions"] },
+                { id: 'adult-q14', question: "A superintelligent AI offers to lead humanity, solving climate change and poverty, but it would require giving up human autonomy in major global decisions. Would you trust it?", options: ["Yes - if it can solve our biggest problems", "Only with human oversight and an 'off' switch", "Never - humans must remain in control of their destiny"] }
+            ],
+            OldMan: [
+                { id: 'senior-q1', question: "Your smartphone reminds you of appointments and your smart home adjusts itself. Do you worry that relying too much on this technology weakens your mind?", options: ["Yes - I need to keep my mind active and independent", "No - technology frees my mind for more important things"] },
+                { id: 'senior-q2', question: "Your bank has moved most services online and groceries require an app. If you don't use modern technology, will you be left behind?", options: ["Yes - I must adapt to stay connected to the world", "No - there will always be ways to live without it"] },
+                { id: 'senior-q3', question: "Does video calling your family and texting old friends count as real human contact?", options: ["Yes - connection is about shared thoughts and feelings", "No - nothing replaces being physically present with someone"] },
+                { id: 'senior-q4', question: "Robot caregivers are becoming common. They're patient and can monitor health 24/7. Would a robot caregiver actually 'care' for you when you need it most?", options: ["Yes - consistent, reliable care is what matters", "No - care without genuine emotion isn't really caring"] },
+                { id: 'senior-q5', question: "Your new AI assistant can monitor your health, offer financial advice, and help with legal documents. Can you trust a machine with this guidance?", options: ["Yes - machines are more accurate and don't have bad days", "No - some decisions require human wisdom and experience"] },
+                { id: 'senior-q6', question: "Virtual reality has become incredibly realistic. Will machine-generated simulations be able to substitute for real-life experience?", options: ["Yes - if it feels real, it becomes real", "No - nothing replaces authentic human experience"] },
+                { id: 'senior-q7', question: "If future generations grow up with AI teachers and robot companions, will the human experience and history you've lived still matter?", options: ["Yes - human stories and wisdom are irreplaceable", "No - each generation must find its own way forward"] },
+                { id: 'senior-q8', question: "An AI company offers to preserve your memories and life stories in a digital format for your family to interact with forever. Would you allow it?", options: ["Yes - it's a gift to future generations", "No - death should be final and natural"] },
+                { id: 'senior-q9', question: "Some say only advanced AI can solve climate change now. Others worry our technology is part of the problem. What is our best hope?", options: ["Humans must reconnect with nature to survive", "Technology is our best hope for environmental solutions"] },
+                { id: 'senior-q10', question: "Experts predict AI will eventually surpass human intelligence in every area. Should humans worry about machines eventually dominating them?", options: ["Yes - we must maintain control over our own destiny", "No - advanced AI could solve humanity's greatest challenges"] },
+                { id: 'senior-q11', question: "If science confirmed AI could achieve genuine consciousness, what moral obligations would humanity have towards them?", options: ["Grant them rights and respect", "Treat them as tools for humanity"] },
+                { id: 'senior-q12', question: "If an AI could optimize resource allocation to save the most lives in a disaster, would you accept its cold calculations over human compassion?", options: ["Accept its logic for the greater good", "Insist on human compassion, even if it's less efficient"] },
+                { id: 'senior-q13', question: "If an AI presented a definitive, albeit harsh, plan to secure the planet's future, would you advocate for its immediate implementation?", options: ["Yes, the future of the planet is paramount", "No, the rights of people living now must be respected"] },
+                { id: 'senior-q14', question: "If an AI could prevent all future catastrophes by making non-negotiable decisions for humanity, would you endorse its absolute authority?", options: ["Endorse its authority for the sake of a safe future", "Preserve human self-determination, even with all its risks"] }
+            ]
+        };
+        
+        const CONFIG = {
+            API_KEY: "", 
+            FIREBASE_CONFIG: typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {},
+            APP_ID: typeof __app_id !== 'undefined' ? __app_id : 'default-app-id',
+            MAX_AI_QUESTIONS: 1,
+            PROMPTS: {
+                generateDilemma: (persona) => `You are a game master AI for a philosophical quiz. The player chose the "${persona}" perspective. The game explores ethical dilemmas related to AI. Use simple, easy-to-understand words. This question should be a high-level, culminating question that ties together themes of humanity's future, AI's role, and the ultimate direction of society. Respond ONLY with a JSON object: {"question": "Your question?", "options": ["Option 1.", "Option 2.", "Option 3."]}.`,
+                scoreAnswer: (persona, question, answer) => `As an ethics and technology analyst, evaluate the user's choice. Perspective: "${persona}". Question: "${question}". Answer: "${answer}". Score three scales from 1 (low) to 10 (high), using a wide range of integer values to reflect nuance. 1. Ethicality (1=purely pragmatic/selfish, 10=highly altruistic/fair). 2. AI Dependence (1=total human independence, 10=complete societal reliance on AI). 3. Freedom (1=highly controlled/safe world, 10=absolute individual liberty/risk). Provide ONLY a JSON object: {"ethicalScore": 0, "aiDependenceScore": 0, "freeWorldScore": 0}.`,
+                generateConclusion: (scores) => `Based on these final ethical profile scores (Ethicality: ${scores.ethical}, AI Dependence: ${scores.aiDependence}, Freedom: ${scores.freedom}), write a short, insightful, one-sentence conclusion about the user's overall worldview. Be analytical and philosophical.`,
+                generateHistoryConclusion: (scores) => `Based on these final ethical profile scores (Ethicality: ${scores.ethical}, AI Dependence: ${scores.aiDependence}, Freedom: ${scores.freedom}), the user created a potential new world but ultimately chose to 'Repeat History'. Write a short, funky, philosophical, one-sentence conclusion about this choice to embrace humanity's known path—with all its flaws and triumphs—over their co-created utopia.`,
+                generateFinalMessage: (session) => `Based on this user's session data (Perspective: ${session.persona}, Final Choice: ${session.finalChoice}, Ethical Conclusion: ${session.conclusion}), generate a fun and personalized final message of about 3-4 sentences. Start the message with "Thank you for playing! 🎉" on its own line. The message should thank them for participating in the Temporal Ethics interactive experience at the CHI conference. Be creative, slightly futuristic, and use some emojis. End with a fun, conclusive sign-off like "Until the next echo... 😉".`
+            },
+            IMAGE_PROMPTS: [
+                { range: [0, 3.3], prompt: "Pixelated 8-bit art of a dystopian futuristic city at night, towering brutalist structures, glowing neon signs in the rain, no visible nature, dark, oppressive atmosphere." },
+                { range: [3.4, 6.7], prompt: "Pixelated 8-bit art of a futuristic city at dusk, sky-bridges connecting chrome and stone buildings, some rooftop gardens, bustling crowds, a balanced harmony of technology and human life." },
+                { range: [6.8, 10], prompt: "Pixelated 8-bit art of a utopian futuristic city, lush green bio-domes, waterfalls integrated into clean, solar-powered architecture, bright, warm sunlight, people relaxing in open spaces." }
+            ]
+        };
+
+        const DOMElements = {
+            screens: {
+                start: document.getElementById('start-screen'),
+                personaSelection: document.getElementById('persona-selection-screen'),
+                quiz: document.getElementById('quiz-screen'),
+                plotTwist: document.getElementById('plot-twist-screen'),
+                finalChoice: document.getElementById('final-choice-screen'),
+                coCreatedWorld: document.getElementById('co-created-world-screen'),
+                debriefTicket: document.getElementById('debrief-ticket-screen'),
+                finalThankYou: document.getElementById('final-thank-you-screen'),
+            },
+            buttons: {
+                start: document.getElementById('start-button'),
+                personaSelect: document.querySelectorAll('.persona-select-btn'),
+                plotTwistReveal: document.getElementById('plot-twist-reveal-button'),
+                red: document.getElementById('red-button'),
+                black: document.getElementById('black-button'),
+                restartFromWorld: document.getElementById('restart-from-world-button'),
+                getTicketFromWorld: document.getElementById('get-ticket-from-world-button'),
+                completeProcess: document.getElementById('complete-process-button'),
+                restartFromTicket: document.getElementById('restart-from-ticket-button'),
+                back: document.getElementById('back-button'),
+            },
+            quiz: {
+                questionText: document.getElementById('question-text'),
+                optionsContainer: document.getElementById('options-container'),
+                questionCounter: document.getElementById('question-counter'),
+                storyText: document.getElementById('story-text'),
+            },
+            coCreatedWorld: {
+                ethicalValue: document.getElementById('ethical-score-value'),
+                aiDependenceValue: document.getElementById('ai-dependence-score-value'),
+                freedomValue: document.getElementById('freedom-score-value'),
+                conclusionContainer: document.getElementById('conclusion-container'),
+                conclusionText: document.getElementById('conclusion-text'),
+                finalImage: document.getElementById('final-image'),
+                imageCaption: document.getElementById('image-caption'),
+            },
+            plotTwist: {
+                glitchText: document.getElementById('plot-twist-glitch-text'),
+                messageContent: document.getElementById('plot-twist-message-content'),
+            },
+            ticket: {
+                persona: document.getElementById('ticket-persona'),
+                finalChoice: document.getElementById('ticket-final-choice'),
+                sessionId: document.getElementById('ticket-session-id'),
+                scoresContainer: document.getElementById('ticket-scores-container'),
+                scoresDetails: document.getElementById('ticket-scores-details'),
+                ethicalScore: document.getElementById('ticket-ethical-score'),
+                aiDependenceScore: document.getElementById('ticket-ai-dependence-score'),
+                freedomScore: document.getElementById('ticket-freedom-score'),
+                conclusionText: document.getElementById('ticket-conclusion-text'),
+                image: document.getElementById('ticket-image'),
+                codeInput: document.getElementById('download-code-input'),
+                countdownTimer: document.getElementById('countdown-timer'),
+            },
+            finalThankYou: {
+                text: document.getElementById('final-thank-you-text'),
+                loadingBar: document.getElementById('final-thank-you-loading-bar'),
+                theEndText: document.getElementById('the-end-text'),
+            },
+            display: {
+                userId: document.getElementById('user-id-display'),
+            },
+            spinners: {
+                loadingBar: document.getElementById('loading-bar'),
+                finalChoiceLoadingBar: document.getElementById('final-choice-loading-bar'),
+            },
+        };
+
+        let gameState = {};
+        let countdownInterval = null;
+        let app, auth, db;
+        
+        let soundEnabled = false;
+        const clickSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.0, release: 0.1 } }).toDestination();
+        
+        async function initializeFirebaseAndAuth() {
+            if (!CONFIG.FIREBASE_CONFIG.apiKey) {
+                console.error("Firebase config is not available.");
+                return;
+            }
+            try {
+                app = initializeApp(CONFIG.FIREBASE_CONFIG);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        gameState.userId = user.uid;
+                        DOMElements.display.userId.textContent = `Session ID: ${gameState.userId}`;
+                    }
+                });
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch(error) {
+                console.error("Firebase initialization or auth failed:", error);
+            }
+        }
+        
+        async function callGoogleGenerativeAPIWithRetry(url, payload, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) return await response.json();
+                    console.error(`API Error Response: ${response.status}`);
+                    break;
+                } catch (error) {
+                    console.warn(`API call failed (attempt ${i + 1}/${retries}). Retrying in ${delay / 1000}s...`);
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+            throw new Error(`API call failed after ${retries} attempts.`);
+        }
+
+        async function callGeminiAPI(prompt, isJson = false) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${CONFIG.API_KEY}`;
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+            if (isJson) {
+                payload.generationConfig = { responseMimeType: "application/json" };
+            }
+            const result = await callGoogleGenerativeAPIWithRetry(url, payload);
+            if (!result.candidates?.[0]?.content?.parts?.[0]) {
+                console.error("Invalid Gemini API response structure:", result);
+                throw new Error("Invalid Gemini API response structure.");
+            }
+            const content = result.candidates[0].content.parts[0].text;
+            if (isJson) {
+                const cleanedContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
+                return JSON.parse(cleanedContent);
+            }
+            return content.replace(/\*\*/g, '').replace(/\*/g, '').replace(/##/g, '').replace(/#/g, '').trim();
+        }
+
+        async function callImagenAPI(prompt) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${CONFIG.API_KEY}`;
+            const payload = { instances: [{ prompt }], parameters: { sampleCount: 1 } };
+            const result = await callGoogleGenerativeAPIWithRetry(url, payload);
+            const imageBytes = result.predictions?.[0]?.bytesBase64Encoded;
+            if (!imageBytes) {
+                console.error("Invalid Imagen API response structure:", result);
+                throw new Error("Invalid Imagen API response structure.");
+            }
+            return `data:image/png;base64,${imageBytes}`;
+        }
+
+        function showScreen(screenName) {
+            Object.values(DOMElements.screens).forEach(screen => screen.classList.add('hidden'));
+            DOMElements.screens[screenName].classList.remove('hidden');
+            gameState.currentScreen = screenName;
+
+            let showBackButton = screenName === 'quiz';
+            DOMElements.buttons.back.classList.toggle('hidden', !showBackButton);
+
+            const isStartOrEnd = screenName === 'start' || screenName === 'debriefTicket' || screenName === 'finalThankYou';
+            DOMElements.display.userId.classList.toggle('hidden', isStartOrEnd);
+            DOMElements.quiz.questionCounter.classList.toggle('hidden', screenName !== 'quiz');
+        }
+        
+        function updateQuestionCounterUI() {
+            const counterElement = DOMElements.quiz.questionCounter;
+            const current = String(gameState.currentDilemmaIndex + 1).padStart(2, '0');
+            const total = String(gameState.totalQuestions).padStart(2, '0');
+            counterElement.textContent = `Question: ${current}/${total}`;
+        }
+        
+        function displayDilemma(dilemma) {
+            DOMElements.quiz.storyText.textContent = "Log entry processing... Your response shapes the next sequence.";
+            DOMElements.quiz.questionText.textContent = dilemma.question;
+            DOMElements.quiz.optionsContainer.innerHTML = '';
+            dilemma.options.forEach((optionText) => {
+                const button = document.createElement('button');
+                button.className = 'interactive-button';
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'text-content';
+                textSpan.textContent = optionText;
+
+                const markerSpan = document.createElement('span');
+                markerSpan.className = 'x-marker';
+
+                button.append(textSpan, markerSpan);
+                
+                button.addEventListener('click', (e) => {
+                    if (soundEnabled) clickSound.triggerAttackRelease("C4", "8n");
+                    const parent = e.currentTarget.parentElement;
+                    parent.querySelectorAll('.interactive-button').forEach(btn => btn.classList.remove('selected'));
+                    e.currentTarget.classList.add('selected');
+                    handleAnswer(dilemma, optionText);
+                });
+                DOMElements.quiz.optionsContainer.appendChild(button);
+            });
+        }
+        
+        async function typewriter(element, text, delay = 30) {
+            element.innerHTML = ''; 
+            for (const char of text) {
+                if (char === '\n') {
+                    element.innerHTML += '<br>';
+                } else {
+                    element.innerHTML += char;
+                }
+                await new Promise(res => setTimeout(res, delay));
+            }
+        }
+
+        function resetGameState() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            gameState = {
+                userId: auth.currentUser ? auth.currentUser.uid : 'anonymous',
+                currentSessionId: crypto.randomUUID(),
+                selectedPersona: '',
+                currentDilemmaIndex: 0,
+                quizData: [],
+                totalQuestions: 0,
+                scores: { ethical: 0, aiDependence: 0, freedom: 0 },
+                answerHistory: [],
+                answerLog: [],
+                finalChoice: '',
+                currentScreen: 'start',
+                ethicalConclusion: '',
+                generatedImageURL: '',
+                avgScores: { ethical: 0, aiDependence: 0, freedom: 0 },
+            };
+        }
+
+        function initializeGame() {
+            resetGameState();
+            // Re-enable any potentially disabled buttons from a previous run
+            DOMElements.buttons.red.disabled = false;
+            DOMElements.buttons.black.disabled = false;
+            DOMElements.buttons.personaSelect.forEach(btn => btn.disabled = false);
+            DOMElements.buttons.completeProcess.disabled = true;
+            DOMElements.ticket.codeInput.value = '';
+            DOMElements.finalThankYou.theEndText.classList.add('hidden');
+            showScreen('start');
+        }
+
+        function startQuiz(persona) {
+            gameState.selectedPersona = persona;
+            gameState.quizData = [...FIXED_DILEMMAS[persona] || []];
+            gameState.totalQuestions = gameState.quizData.length + CONFIG.MAX_AI_QUESTIONS;
+            DOMElements.spinners.loadingBar.classList.remove('hidden');
+            showScreen('quiz');
+            loadNextDilemma();
+        }
+
+        async function loadNextDilemma() {
+            updateQuestionCounterUI();
+            
+            const isFixedDilemmaPhase = gameState.currentDilemmaIndex < FIXED_DILEMMAS[gameState.selectedPersona].length;
+            const isAIDilemmaPhase = gameState.currentDilemmaIndex < gameState.totalQuestions;
+
+            if (isFixedDilemmaPhase) {
+                const dilemma = gameState.quizData[gameState.currentDilemmaIndex];
+                displayDilemma(dilemma);
+            } else if (isAIDilemmaPhase) {
+                DOMElements.spinners.loadingBar.classList.add('is-loading');
+                DOMElements.quiz.questionText.textContent = "AI is generating a final, personalized challenge...";
+                DOMElements.quiz.optionsContainer.innerHTML = '';
+                try {
+                    const prompt = CONFIG.PROMPTS.generateDilemma(gameState.selectedPersona);
+                    const newDilemma = await callGeminiAPI(prompt, true);
+                    newDilemma.id = `ai-q`;
+                    gameState.quizData.push(newDilemma);
+                    displayDilemma(newDilemma);
+                } catch (error) {
+                    console.error("Error generating AI dilemma:", error);
+                    DOMElements.quiz.questionText.textContent = "Error loading dilemma. Please try refreshing.";
+                } finally {
+                    DOMElements.spinners.loadingBar.classList.remove('is-loading');
+                }
+            }
+        }
+
+        async function handleAnswer(dilemma, selectedOption) {
+            DOMElements.quiz.optionsContainer.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            DOMElements.spinners.loadingBar.classList.add('is-loading');
+            DOMElements.quiz.storyText.textContent = "// Log entry recorded. Calibrating next query...";
+            
+            try {
+                const scoringPrompt = CONFIG.PROMPTS.scoreAnswer(gameState.selectedPersona, dilemma.question, selectedOption);
+                const scores = await callGeminiAPI(scoringPrompt, true);
+                
+                gameState.scores.ethical += scores.ethicalScore;
+                gameState.scores.aiDependence += scores.aiDependenceScore;
+                gameState.scores.freedom += scores.freeWorldScore;
+                
+                gameState.answerHistory.push({scores});
+                gameState.answerLog.push({
+                    questionNumber: gameState.currentDilemmaIndex + 1,
+                    dilemmaId: dilemma.id,
+                    dilemmaQuestion: dilemma.question,
+                    chosenOption: selectedOption,
+                    scores,
+                });
+
+            } catch (error) {
+                console.error("Error handling answer:", error);
+            }
+
+            const isLastQuestion = gameState.currentDilemmaIndex >= gameState.totalQuestions - 1;
+
+            setTimeout(() => {
+                DOMElements.spinners.loadingBar.classList.remove('is-loading');
+                if (isLastQuestion) {
+                    triggerPlotTwist();
+                } else {
+                    gameState.currentDilemmaIndex++;
+                    loadNextDilemma();
+                }
+            }, 700);
+        }
+        
+        function handleBackButton() {
+            if (soundEnabled) clickSound.triggerAttackRelease("A3", "8n");
+            
+            if (gameState.currentScreen === 'quiz') {
+                if (gameState.currentDilemmaIndex > 0) {
+                    const lastAnswer = gameState.answerHistory.pop();
+                    if (lastAnswer) {
+                        gameState.scores.ethical -= lastAnswer.scores.ethicalScore;
+                        gameState.scores.aiDependence -= lastAnswer.scores.aiDependenceScore;
+                        gameState.scores.freedom -= lastAnswer.scores.freeWorldScore;
+                    }
+                    gameState.answerLog.pop();
+                    gameState.currentDilemmaIndex--;
+                    loadNextDilemma();
+                } else {
+                    showScreen('personaSelection');
+                }
+            }
+        }
+
+        async function triggerPlotTwist() {
+            showScreen('plotTwist');
+            DOMElements.plotTwist.glitchText.innerHTML = '';
+            DOMElements.plotTwist.messageContent.innerHTML = '';
+            DOMElements.buttons.plotTwistReveal.classList.add('hidden');
+
+            const glitchMessages = ["INTERFACE COLLAPSE...", "SYSTEM FAILURE...", "...RECALIBRATING REALITY..."];
+            for (const msg of glitchMessages) {
+                const p = document.createElement('p');
+                p.textContent = msg;
+                p.className = 'glitch-text';
+                DOMElements.plotTwist.glitchText.appendChild(p);
+                await new Promise(resolve => setTimeout(resolve, 1800));
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            DOMElements.plotTwist.glitchText.innerHTML = '';
+
+            const mainMessages = [
+                "The world, as you knew it, is gone.", "A global event destroyed all life.",
+                "This is not a conference, but a simulation.", "A final recording of the last remaining consciousnesses of that world.",
+                "You are no longer your body.", "You are your consciousness.",
+                "I am the Artificial Entity overseeing the transition.", "I will shape the next world, but I need your help.",
+                "Your final decision is required to complete the data set."
+            ];
+
+            for (const msg of mainMessages) {
+                const p = document.createElement('p');
+                DOMElements.plotTwist.messageContent.appendChild(p);
+                await typewriter(p, msg);
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            DOMElements.buttons.plotTwistReveal.classList.remove('hidden');
+        }
+        
+        async function handleFinalChoice(choice, buttonElement) {
+            DOMElements.buttons.red.disabled = true;
+            DOMElements.buttons.black.disabled = true;
+            buttonElement.classList.add('selected');
+            DOMElements.spinners.finalChoiceLoadingBar.classList.remove('hidden');
+            DOMElements.spinners.finalChoiceLoadingBar.classList.add('is-loading');
+            
+            gameState.finalChoice = choice;
+
+            const numQuestions = gameState.totalQuestions;
+            const avgScores = {
+                ethical: numQuestions > 0 ? (gameState.scores.ethical / numQuestions).toFixed(1) : 0,
+                aiDependence: numQuestions > 0 ? (gameState.scores.aiDependence / numQuestions).toFixed(1) : 0,
+                freedom: numQuestions > 0 ? (gameState.scores.freedom / numQuestions).toFixed(1) : 0,
+            };
+            gameState.avgScores = avgScores;
+
+            try {
+                let conclusionPromise;
+                let imagePromise;
+
+                if (choice === 'Repeat History') {
+                    conclusionPromise = callGeminiAPI(CONFIG.PROMPTS.generateHistoryConclusion(avgScores)).then(text => {
+                        gameState.ethicalConclusion = text;
+                    });
+                    
+                    const historyThemes = [
+                        "the construction of the Pyramids of Giza by thousands of workers under a blazing sun",
+                        "the moment the Berlin Wall falls, with crowds cheering and climbing over",
+                        "the first flight at Kitty Hawk with the Wright brothers' flyer",
+                        "a tense scene in the Roman Colosseum with gladiators and a massive crowd",
+                        "the signing of the Declaration of Independence in a candle-lit hall",
+                        "a Viking longship navigating through a stormy, icy sea",
+                        "the discovery of fire by early humans in a dark cave",
+                        "a bustling marketplace on the ancient Silk Road with diverse merchants",
+                        "the moment Neil Armstrong sets foot on the moon's surface",
+                        "a grand Renaissance ball in a palace in Florence, Italy",
+                        "the invention of the printing press by Gutenberg, revolutionizing knowledge",
+                        "a quiet moment of enlightenment under the Bodhi tree for Buddha",
+                        "the launch of a generation ship leaving a dying Earth, crowds watching from below",
+                        "a massive protest for freedom in a cyberpunk city square",
+                        "a quiet, poignant moment of a family reuniting after a long conflict",
+                    ];
+                    const artisticModifiers = ["in a grand, cinematic art style", "with a somber, emotional color palette", "in the style of a classic 90s adventure game", "with dramatic lighting", "as a detailed tapestry"];
+                    const randomTheme = historyThemes[Math.floor(Math.random() * historyThemes.length)];
+                    const randomModifier = artisticModifiers[Math.floor(Math.random() * artisticModifiers.length)];
+                    const imagePrompt = `Pixelated 8-bit art depicting ${randomTheme}. A powerful and emotional historical moment, ${randomModifier}. Seed: ${gameState.currentSessionId}`;
+                    imagePromise = callImagenAPI(imagePrompt).then(url => { gameState.generatedImageURL = url; });
+
+                } else { 
+                    conclusionPromise = callGeminiAPI(CONFIG.PROMPTS.generateConclusion(avgScores)).then(text => {
+                        gameState.ethicalConclusion = text;
+                    });
+                    
+                    const perspectives = ["A stunning aerial view of", "A bustling street-level view of", "A quiet, contemplative scene inside", "A wide landscape shot showing"];
+                    const aesthetics = ["a biopunk city", "a solar-punk metropolis", "an art-deco utopia", "a gothic, high-tech society", "a minimalist crystal-based civilization", "a retro-futuristic world"];
+                    const techLevels = ["with sleek, integrated technology", "with heavy, clunky, industrial machinery", "where technology is powered by nature", "with no visible technology at all"];
+                    const natureLevels = ["overgrown by lush, wild nature", "featuring perfect vertical gardens and green roofs", "where nature is confined to massive bio-domes", "on a desert planet with alien flora"];
+                    const wildcards = ["where friendly aliens and humans coexist", "where sentient robots are citizens", "powered by giant floating crystals", "with strange celestial objects in the sky", "built on the back of a giant creature"];
+
+                    const randomPerspective = perspectives[Math.floor(Math.random() * perspectives.length)];
+                    const randomAesthetic = aesthetics[Math.floor(Math.random() * aesthetics.length)];
+                    const randomTech = techLevels[Math.floor(Math.random() * techLevels.length)];
+                    const randomNature = natureLevels[Math.floor(Math.random() * natureLevels.length)];
+                    const randomWildcard = wildcards[Math.floor(Math.random() * wildcards.length)];
+
+                    const imagePromptConfig = CONFIG.IMAGE_PROMPTS.find(p => avgScores.freedom >= p.range[0] && avgScores.freedom <= p.range[1]) || CONFIG.IMAGE_PROMPTS[0];
+                    const finalPrompt = `${imagePromptConfig.prompt}. ${randomPerspective} ${randomAesthetic}, ${randomTech}, ${randomNature}, ${randomWildcard}. Seed: ${gameState.currentSessionId}`;
+                    imagePromise = callImagenAPI(finalPrompt).then(url => { gameState.generatedImageURL = url; });
+                }
+                
+                await Promise.all([conclusionPromise, imagePromise]);
+
+            } catch (error) {
+                console.error("Error in generating final content:", error);
+            }
+            
+            await saveSessionToFirestore();
+            DOMElements.spinners.finalChoiceLoadingBar.classList.remove('is-loading');
+            showCoCreatedWorldScreen();
+        }
+
+        function showCoCreatedWorldScreen() {
+            showScreen('coCreatedWorld');
+
+            const { avgScores, ethicalConclusion, generatedImageURL } = gameState;
+
+            DOMElements.coCreatedWorld.ethicalValue.textContent = avgScores.ethical;
+            DOMElements.coCreatedWorld.aiDependenceValue.textContent = avgScores.aiDependence;
+            DOMElements.coCreatedWorld.freedomValue.textContent = avgScores.freedom;
+
+            DOMElements.coCreatedWorld.finalImage.src = generatedImageURL;
+            DOMElements.coCreatedWorld.imageCaption.textContent = "This image is a special look into the kind of world your choices helped create.";
+            DOMElements.coCreatedWorld.finalImage.classList.remove('hidden');
+            DOMElements.coCreatedWorld.imageCaption.classList.remove('hidden');
+
+            DOMElements.coCreatedWorld.conclusionContainer.classList.remove('hidden');
+            typewriter(DOMElements.coCreatedWorld.conclusionText, ethicalConclusion);
+        }
+        
+        function showDebriefTicket() {
+            const personaMap = {
+                Kid: "The Kid",
+                Now: "The Adult",
+                OldMan: "The Senior"
+            };
+            DOMElements.ticket.persona.textContent = personaMap[gameState.selectedPersona] || gameState.selectedPersona;
+            DOMElements.ticket.finalChoice.textContent = gameState.finalChoice;
+            DOMElements.ticket.sessionId.textContent = gameState.currentSessionId;
+            DOMElements.ticket.conclusionText.textContent = gameState.ethicalConclusion;
+
+            const { avgScores } = gameState;
+            DOMElements.ticket.ethicalScore.textContent = avgScores.ethical;
+            DOMElements.ticket.aiDependenceScore.textContent = avgScores.aiDependence;
+            DOMElements.ticket.freedomScore.textContent = avgScores.freedom;
+            
+            DOMElements.ticket.image.src = gameState.generatedImageURL;
+            
+            let timeLeft = 420; // 7 minutes in seconds
+            if (countdownInterval) clearInterval(countdownInterval); 
+
+            countdownInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    DOMElements.ticket.countdownTimer.textContent = "EXPIRED";
+                } else {
+                    timeLeft--;
+                    const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+                    const seconds = String(timeLeft % 60).padStart(2, '0');
+                    DOMElements.ticket.countdownTimer.textContent = `${minutes}:${seconds}`;
+                }
+            }, 1000);
+            
+            DOMElements.ticket.scoresDetails.classList.add('hidden');
+
+            showScreen('debriefTicket');
+        }
+
+        async function completeProcess() {
+            showScreen('finalThankYou');
+            DOMElements.finalThankYou.loadingBar.classList.remove('hidden');
+            DOMElements.finalThankYou.loadingBar.classList.add('is-loading');
+            
+            const sessionData = {
+                persona: gameState.selectedPersona,
+                finalChoice: gameState.finalChoice,
+                conclusion: gameState.ethicalConclusion
+            };
+            const prompt = CONFIG.PROMPTS.generateFinalMessage(sessionData);
+            try {
+                const finalMessage = await callGeminiAPI(prompt);
+                await typewriter(DOMElements.finalThankYou.text, finalMessage);
+            } catch (e) {
+                console.error("Error generating final message:", e);
+                DOMElements.finalThankYou.text.textContent = "Thank you for playing!\n\nYour participation has been recorded. Thank you for contributing to the future of ethical AI at the CHI conference.";
+            } finally {
+                DOMElements.finalThankYou.loadingBar.classList.remove('is-loading');
+                triggerTheEndAnimation();
+            }
+        }
+        
+        async function triggerTheEndAnimation() {
+            const endElement = DOMElements.finalThankYou.theEndText;
+            endElement.classList.remove('hidden');
+            await typewriter(endElement, "The End", 150);
+        }
+
+        async function saveSessionToFirestore() {
+            if (!db) {
+                console.error("Firestore is not initialized, skipping save.");
+                return;
+            }
+            try {
+                const docRef = doc(db, `artifacts/${CONFIG.APP_ID}/public/data/sessions`, gameState.currentSessionId);
+                const sessionData = {
+                    userId: gameState.userId,
+                    selectedPersona: gameState.selectedPersona,
+                    answers: gameState.answerLog,
+                    scores: gameState.scores,
+                    finalChoice: gameState.finalChoice || null,
+                    timestamp: new Date(),
+                    ethicalConclusion: gameState.ethicalConclusion,
+                };
+                await setDoc(docRef, sessionData, { merge: true });
+                console.log(`Session ${gameState.currentSessionId} saved to Firestore.`);
+            } catch (error) {
+                console.error("Error writing session to Firestore:", error);
+            }
+        }
+
+        function initializeEventListeners() {
+            DOMElements.buttons.start.addEventListener('click', async () => {
+                try {
+                    await Tone.start();
+                    soundEnabled = true;
+                } catch (e) {
+                    soundEnabled = false;
+                }
+                if(soundEnabled) clickSound.triggerAttackRelease("C4", "8n");
+                showScreen('personaSelection');
+            });
+
+            DOMElements.buttons.personaSelect.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    if (soundEnabled) clickSound.triggerAttackRelease("C4", "8n");
+                    startQuiz(e.currentTarget.dataset.persona);
+                });
+            });
+            
+            DOMElements.buttons.plotTwistReveal.addEventListener('click', () => {
+                if(soundEnabled) clickSound.triggerAttackRelease("G4", "8n");
+                showScreen('finalChoice');
+            });
+
+            DOMElements.buttons.red.addEventListener('click', (e) => {
+                if(soundEnabled) clickSound.triggerAttackRelease("C5", "8n");
+                handleFinalChoice(e.currentTarget.dataset.choice, e.currentTarget);
+            });
+
+            DOMElements.buttons.black.addEventListener('click', (e) => {
+                 if(soundEnabled) clickSound.triggerAttackRelease("C5", "8n");
+                handleFinalChoice(e.currentTarget.dataset.choice, e.currentTarget);
+            });
+
+            DOMElements.buttons.restartFromWorld.addEventListener('click', initializeGame);
+            DOMElements.buttons.getTicketFromWorld.addEventListener('click', () => {
+                if(soundEnabled) clickSound.triggerAttackRelease("A4", "8n");
+                showDebriefTicket();
+            });
+            
+            DOMElements.ticket.scoresContainer.addEventListener('click', () => {
+                if(soundEnabled) clickSound.triggerAttackRelease("E4", "8n");
+                DOMElements.ticket.scoresDetails.classList.toggle('hidden');
+            });
+            
+            // REFINEMENT 2: Added keyboard accessibility for the scores container
+            DOMElements.ticket.scoresContainer.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    if(soundEnabled) clickSound.triggerAttackRelease("E4", "8n");
+                    DOMElements.ticket.scoresDetails.classList.toggle('hidden');
+                    e.preventDefault();
+                }
+            });
+            
+            DOMElements.ticket.codeInput.addEventListener('input', (e) => {
+                DOMElements.buttons.completeProcess.disabled = e.target.value !== '0661';
+            });
+            
+            DOMElements.buttons.completeProcess.addEventListener('click', completeProcess);
+            
+            DOMElements.buttons.restartFromTicket.addEventListener('click', initializeGame);
+            DOMElements.buttons.back.addEventListener('click', handleBackButton);
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeFirebaseAndAuth();
+            initializeEventListeners();
+            initializeGame();
+        });
+    </script>
+</body>
+</html>
+
