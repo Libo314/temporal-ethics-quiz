@@ -405,24 +405,40 @@
             ]
         };
         
-        const CONFIG = {
-            API_KEY: "", 
-            FIREBASE_CONFIG: typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {},
-            APP_ID: typeof __app_id !== 'undefined' ? __app_id : 'default-app-id',
-            MAX_AI_QUESTIONS: 1,
-            PROMPTS: {
-                generateDilemma: (persona) => `You are a game master AI for a philosophical quiz. The player chose the "${persona}" perspective. The game explores ethical dilemmas related to AI. Use simple, easy-to-understand words. This question should be a high-level, culminating question that ties together themes of humanity's future, AI's role, and the ultimate direction of society. Respond ONLY with a JSON object: {"question": "Your question?", "options": ["Option 1.", "Option 2.", "Option 3."]}.`,
-                scoreAnswer: (persona, question, answer) => `As an ethics and technology analyst, evaluate the user's choice. Perspective: "${persona}". Question: "${question}". Answer: "${answer}". Score three scales from 1 (low) to 10 (high), using a wide range of integer values to reflect nuance. 1. Ethicality (1=purely pragmatic/selfish, 10=highly altruistic/fair). 2. AI Dependence (1=total human independence, 10=complete societal reliance on AI). 3. Freedom (1=highly controlled/safe world, 10=absolute individual liberty/risk). Provide ONLY a JSON object: {"ethicalScore": 0, "aiDependenceScore": 0, "freeWorldScore": 0}.`,
-                generateConclusion: (scores) => `Based on these final ethical profile scores (Ethicality: ${scores.ethical}, AI Dependence: ${scores.aiDependence}, Freedom: ${scores.freedom}), write a short, insightful, one-sentence conclusion about the user's overall worldview. Be analytical and philosophical.`,
-                generateHistoryConclusion: (scores) => `Based on these final ethical profile scores (Ethicality: ${scores.ethical}, AI Dependence: ${scores.aiDependence}, Freedom: ${scores.freedom}), the user created a potential new world but ultimately chose to 'Repeat History'. Write a short, funky, philosophical, one-sentence conclusion about this choice to embrace humanity's known path—with all its flaws and triumphs—over their co-created utopia.`,
-                generateFinalMessage: (session) => `Based on this user's session data (Perspective: ${session.persona}, Final Choice: ${session.finalChoice}, Ethical Conclusion: ${session.conclusion}), generate a fun and personalized final message of about 3-4 sentences. Start the message with "Thank you for playing! 🎉" on its own line. The message should thank them for participating in the Temporal Ethics interactive experience at the CHI conference. Be creative, slightly futuristic, and use some emojis. End with a fun, conclusive sign-off like "Until the next echo... 😉".`
-            },
-            IMAGE_PROMPTS: [
-                { range: [0, 3.3], prompt: "Pixelated 8-bit art of a dystopian futuristic city at night, towering brutalist structures, glowing neon signs in the rain, no visible nature, dark, oppressive atmosphere." },
-                { range: [3.4, 6.7], prompt: "Pixelated 8-bit art of a futuristic city at dusk, sky-bridges connecting chrome and stone buildings, some rooftop gardens, bustling crowds, a balanced harmony of technology and human life." },
-                { range: [6.8, 10], prompt: "Pixelated 8-bit art of a utopian futuristic city, lush green bio-domes, waterfalls integrated into clean, solar-powered architecture, bright, warm sunlight, people relaxing in open spaces." }
-            ]
-        };
+       // --- START: REPLACE THE OLD CONFIG OBJECT WITH THIS ---
+const CONFIG = {
+    // Paste the Google AI API Key here
+    API_KEY: "AIzaSyBBdQRzRhLgvZrVfsvsy5q4FwUs08FYTs8", 
+
+    // Paste the Firebase Config object here
+    FIREBASE_CONFIG: {
+        apiKey: "AIzaSyDM01XyrPkzjlNAwDgYsE4KzDCdI8fO264",
+        authDomain: "temporal-ethics-db.firebaseapp.com",
+        projectId: "temporal-ethics-db",
+        storageBucket: "temporal-ethics-db.firebasestorage.app",
+        messagingSenderId: "571063174052",
+        appId: "1:571063174052:web:748f851459d21317ed3731"
+    },
+
+    // Paste your Firebase Project ID here again
+    APP_ID: "temporal-ethics-db",
+
+    // The rest of the configuration remains the same
+    MAX_AI_QUESTIONS: 1,
+    PROMPTS: {
+        generateDilemma: (persona) => `You are a game master AI for a philosophical quiz. The player chose the "${persona}" perspective. The game explores ethical dilemmas related to AI. Use simple, easy-to-understand words. This question should be a high-level, culminating question that ties together themes of humanity's future, AI's role, and the ultimate direction of society. Respond ONLY with a JSON object: {"question": "Your question?", "options": ["Option 1.", "Option 2.", "Option 3."]}.`,
+        scoreAnswer: (persona, question, answer) => `As an ethics and technology analyst, evaluate the user's choice. Perspective: "${persona}". Question: "${question}". Answer: "${answer}". Score three scales from 1 (low) to 10 (high), using a wide range of integer values to reflect nuance. 1. Ethicality (1=purely pragmatic/selfish, 10=highly altruistic/fair). 2. AI Dependence (1=total human independence, 10=complete societal reliance on AI). 3. Freedom (1=highly controlled/safe world, 10=absolute individual liberty/risk). Provide ONLY a JSON object: {"ethicalScore": 0, "aiDependenceScore": 0, "freeWorldScore": 0}.`,
+        generateConclusion: (scores) => `Based on these final ethical profile scores (Ethicality: ${scores.ethical}, AI Dependence: ${scores.aiDependence}, Freedom: ${scores.freedom}), write a short, insightful, one-sentence conclusion about the user's overall worldview. Be analytical and philosophical.`,
+        generateHistoryConclusion: (scores) => `Based on these final ethical profile scores (Ethicality: ${scores.ethical}, AI Dependence: ${scores.aiDependence}, Freedom: ${scores.freedom}), the user created a potential new world but ultimately chose to 'Repeat History'. Write a short, funky, philosophical, one-sentence conclusion about this choice to embrace humanity's known path—with all its flaws and triumphs—over their co-created utopia.`,
+        generateFinalMessage: (session) => `Based on this user's session data (Perspective: ${session.persona}, Final Choice: ${session.finalChoice}, Ethical Conclusion: ${session.conclusion}), generate a fun and personalized final message of about 3-4 sentences. Start the message with "Thank you for playing! 🎉" on its own line. The message should thank them for participating in the Temporal Ethics interactive experience at the CHI conference. Be creative, slightly futuristic, and use some emojis. End with a fun, conclusive sign-off like "Until the next echo... 😉".`
+    },
+    IMAGE_PROMPTS: [
+        { range: [0, 3.3], prompt: "Pixelated 8-bit art of a dystopian futuristic city at night, towering brutalist structures, glowing neon signs in the rain, no visible nature, dark, oppressive atmosphere." },
+        { range: [3.4, 6.7], prompt: "Pixelated 8-bit art of a futuristic city at dusk, sky-bridges connecting chrome and stone buildings, some rooftop gardens, bustling crowds, a balanced harmony of technology and human life." },
+        { range: [6.8, 10], prompt: "Pixelated 8-bit art of a utopian futuristic city, lush green bio-domes, waterfalls integrated into clean, solar-powered architecture, bright, warm sunlight, people relaxing in open spaces." }
+    ]
+};
+// --- END: THE NEW CONFIG OBJECT ENDS HERE ---
 
         const DOMElements = {
             screens: {
